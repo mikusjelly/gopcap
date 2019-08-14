@@ -37,7 +37,7 @@ If you'd like to contribute, do the following:
    passes after your changes have been made.
 4. Send a Pull Request. Don't forget to add yourself to the AUTHORS file.
 
-## License
+## License
 
 This PCAP parsing library is available under
 [the MIT license](http://opensource.org/licenses/MIT). You are free to use this
