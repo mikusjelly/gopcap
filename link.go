@@ -14,10 +14,12 @@ type UnknownLink struct {
 	data InternetLayer
 }
 
+// LinkData get data
 func (u *UnknownLink) LinkData() InternetLayer {
 	return u.data
 }
 
+// FromBytes set data
 func (u *UnknownLink) FromBytes(data []byte) error {
 	u.data = new(UnknownINet)
 	err := u.data.FromBytes(data)
@@ -38,14 +40,15 @@ type EthernetFrame struct {
 	data           InternetLayer
 }
 
+// LinkData get data
 func (e *EthernetFrame) LinkData() InternetLayer {
 	return e.data
 }
 
-// Given a series of bytes, populate the EthernetFrame structure.
+// FromBytes Given a series of bytes, populate the EthernetFrame structure.
 func (e *EthernetFrame) FromBytes(data []byte) error {
 	if len(data) <= 14 {
-		return InsufficientLength
+		return ErrInsufficientLength
 	}
 
 	e.MACDestination = data[0:6]
@@ -59,7 +62,7 @@ func (e *EthernetFrame) FromBytes(data []byte) error {
 	}
 
 	// Handle the length/EtherType nonsense.
-	lenOrType := getUint16(data[12:14], false)
+	lenOrType := GetUint16(data[12:14], false)
 	if lenOrType >= minEtherType {
 		e.EtherType = EtherType(lenOrType)
 	} else {

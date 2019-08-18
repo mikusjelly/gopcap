@@ -22,7 +22,7 @@ func TestCheckMagicNum(t *testing.T) {
 
 	first := []bool{true, true, false, false}
 	second := []bool{false, true, false, false}
-	third := []error{nil, nil, NotAPcapFile, InsufficientLength}
+	third := []error{nil, nil, ErrNotAPcapFile, ErrInsufficientLength}
 
 	for i, input := range in {
 		out1, out2, out3 := checkMagicNum(input)
@@ -45,13 +45,13 @@ func TestPopulatePacketHeaderGood(t *testing.T) {
 	in := byteReader{0xfa, 0x4f, 0xef, 0x44, 0x64, 0xfd, 0x09, 0x00, 0x60, 0x00, 0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00}
 	pkt := new(Packet)
 	err := populatePacketHeader(pkt, in, true)
-	correct_ts := 321259*time.Hour + 31*time.Minute + 6*time.Second + 654*time.Millisecond + 692*time.Microsecond
+	correctTs := 321259*time.Hour + 31*time.Minute + 6*time.Second + 654*time.Millisecond + 692*time.Microsecond
 
 	if err != nil {
 		t.Errorf("Received unexpected error: %v", err)
 	}
-	if pkt.Timestamp != correct_ts {
-		t.Errorf("Incorrect timestamp: expected %v, got %v", correct_ts, pkt.Timestamp)
+	if pkt.Timestamp != correctTs {
+		t.Errorf("Incorrect timestamp: expected %v, got %v", correctTs, pkt.Timestamp)
 	}
 	if pkt.IncludedLen != uint32(96) {
 		t.Errorf("Incorrect included length: expected %v, got %v", 96, pkt.IncludedLen)
@@ -66,8 +66,8 @@ func TestPopulatePacketHeaderErr(t *testing.T) {
 	pkt := new(Packet)
 	err := populatePacketHeader(pkt, in, false)
 
-	if err != InsufficientLength {
-		t.Errorf("Unexpected error: expected %v, got %v", InsufficientLength, err)
+	if err != ErrInsufficientLength {
+		t.Errorf("Unexpected error: expected %v, got %v", ErrInsufficientLength, err)
 	}
 }
 
@@ -104,7 +104,7 @@ func TestPopulateFileHeaderErr(t *testing.T) {
 	fle := new(PcapFile)
 	err := populateFileHeader(fle, in, false)
 
-	if err != InsufficientLength {
-		t.Errorf("Unexpected error: expected %v, got %v", InsufficientLength, err)
+	if err != ErrInsufficientLength {
+		t.Errorf("Unexpected error: expected %v, got %v", ErrInsufficientLength, err)
 	}
 }

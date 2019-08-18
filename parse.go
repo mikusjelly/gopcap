@@ -13,13 +13,13 @@ import (
 func checkMagicNum(src io.Reader) (bool, bool, error) {
 	// These magic numbers form the header of a pcap file.
 	magic := []byte{0xa1, 0xb2, 0xc3, 0xd4}
-	magic_reverse := []byte{0xd4, 0xc3, 0xb2, 0xa1}
+	magicReverse := []byte{0xd4, 0xc3, 0xb2, 0xa1}
 
 	buffer := make([]byte, 4)
-	read_count, err := src.Read(buffer)
+	readCount, err := src.Read(buffer)
 
-	if read_count != 4 {
-		return false, false, InsufficientLength
+	if readCount != 4 {
+		return false, false, ErrInsufficientLength
 	}
 	if (err != nil) && (err != io.EOF) {
 		return false, false, err
@@ -27,11 +27,11 @@ func checkMagicNum(src io.Reader) (bool, bool, error) {
 
 	if bytes.Compare(buffer, magic) == 0 {
 		return true, false, nil
-	} else if bytes.Compare(buffer, magic_reverse) == 0 {
+	} else if bytes.Compare(buffer, magicReverse) == 0 {
 		return true, true, nil
 	}
 
-	return false, false, NotAPcapFile
+	return false, false, ErrNotAPcapFile
 }
 
 // parsePacket parses a full packet out of the pcap file. It returns an error if any problems were
@@ -46,7 +46,7 @@ func parsePacket(pkt *Packet, src io.Reader, flipped bool, linkType Link) error 
 	data := make([]byte, pkt.IncludedLen)
 	readlen, err := src.Read(data)
 	if uint32(readlen) != pkt.IncludedLen {
-		return UnexpectedEOF
+		return ErrUnexpectedEOF
 	}
 
 	pkt.Data, err = parseLinkData(data, linkType)
@@ -58,31 +58,31 @@ func parsePacket(pkt *Packet, src io.Reader, flipped bool, linkType Link) error 
 // PcapFile structure.
 func populateFileHeader(file *PcapFile, src io.Reader, flipped bool) error {
 	buffer := make([]byte, 20)
-	read_count, err := src.Read(buffer)
+	readCount, err := src.Read(buffer)
 
 	if err != nil {
 		return err
-	} else if read_count != 20 {
-		return InsufficientLength
+	} else if readCount != 20 {
+		return ErrInsufficientLength
 	}
 
 	// First two bytes are the major version number.
-	file.MajorVersion = getUint16(buffer[0:2], flipped)
+	file.MajorVersion = GetUint16(buffer[0:2], flipped)
 
 	// Next two are the minor version number.
-	file.MinorVersion = getUint16(buffer[2:4], flipped)
+	file.MinorVersion = GetUint16(buffer[2:4], flipped)
 
 	// GMT to local correction, in seconds east of UTC.
-	file.TZCorrection = getInt32(buffer[4:8], flipped)
+	file.TZCorrection = GetInt32(buffer[4:8], flipped)
 
 	// Next is the number of significant figures in the timestamps. Almost always zero.
-	file.SigFigs = getUint32(buffer[8:12], flipped)
+	file.SigFigs = GetUint32(buffer[8:12], flipped)
 
 	// Now the maximum length of the captured packet data.
-	file.MaxLen = getUint32(buffer[12:16], flipped)
+	file.MaxLen = GetUint32(buffer[12:16], flipped)
 
 	// And the link type.
-	file.LinkType = Link(getUint32(buffer[16:20], flipped))
+	file.LinkType = Link(GetUint32(buffer[16:20], flipped))
 
 	return nil
 }
@@ -91,24 +91,24 @@ func populateFileHeader(file *PcapFile, src io.Reader, flipped bool) error {
 // packet header.
 func populatePacketHeader(packet *Packet, src io.Reader, flipped bool) error {
 	buffer := make([]byte, 16)
-	read_count, err := src.Read(buffer)
+	readCount, err := src.Read(buffer)
 
 	if err != nil {
 		return err
-	} else if read_count != 16 {
-		return InsufficientLength
+	} else if readCount != 16 {
+		return ErrInsufficientLength
 	}
 
 	// First is a pair of fields that build up the timestamp.
-	ts_seconds := getUint32(buffer[0:4], flipped)
-	ts_micros := getUint32(buffer[4:8], flipped)
-	packet.Timestamp = (time.Duration(ts_seconds) * time.Second) + (time.Duration(ts_micros) * time.Microsecond)
+	tsSeconds := GetUint32(buffer[0:4], flipped)
+	tsMicros := GetUint32(buffer[4:8], flipped)
+	packet.Timestamp = (time.Duration(tsSeconds) * time.Second) + (time.Duration(tsMicros) * time.Microsecond)
 
 	// Next is the length of the data segment.
-	packet.IncludedLen = getUint32(buffer[8:12], flipped)
+	packet.IncludedLen = GetUint32(buffer[8:12], flipped)
 
 	// Then the original length of the packet.
-	packet.ActualLen = getUint32(buffer[12:16], flipped)
+	packet.ActualLen = GetUint32(buffer[12:16], flipped)
 
 	return err
 }

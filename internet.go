@@ -10,10 +10,12 @@ type UnknownINet struct {
 	data TransportLayer
 }
 
+// InternetData 获取数据
 func (u *UnknownINet) InternetData() TransportLayer {
 	return u.data
 }
 
+// FromBytes 格式化数据
 func (u *UnknownINet) FromBytes(data []byte) error {
 	u.data = new(UnknownTransport)
 	u.data.FromBytes(data)
@@ -44,22 +46,24 @@ type IPv4Packet struct {
 	data           TransportLayer
 }
 
+// InternetData get data
 func (p *IPv4Packet) InternetData() TransportLayer {
 	return p.data
 }
 
+// FromBytes set data
 func (p *IPv4Packet) FromBytes(data []byte) error {
 	// The IPv4 header is full of crazy non-aligned fields that I've expanded in the structure.
 	// This makes this function a total nightmare. My apologies in advance.
 
 	// Check that we have enough data for the header, at the very least.
 	if len(data) < 20 {
-		return InsufficientLength
+		return ErrInsufficientLength
 	}
 
 	// Check that this actually is an IPv4 packet.
 	if ((uint8(data[0]) & 0xF0) >> 4) != uint8(4) {
-		return IncorrectPacket
+		return ErrIncorrectPacket
 	}
 
 	// The header length is the low four bits of the first byte.
@@ -72,10 +76,10 @@ func (p *IPv4Packet) FromBytes(data []byte) error {
 	p.ECN = uint8(data[1]) & 0x03
 
 	// Total length is saner: 16-bit integer.
-	p.TotalLength = getUint16(data[2:4], false)
+	p.TotalLength = GetUint16(data[2:4], false)
 
 	// Same with the ID.
-	p.ID = getUint16(data[4:6], false)
+	p.ID = GetUint16(data[4:6], false)
 
 	// Back to the crazy with the flags: the top three bits of the 7th byte. We only care
 	// about bits two and three. It hurt me to write that sentence.
@@ -87,7 +91,7 @@ func (p *IPv4Packet) FromBytes(data []byte) error {
 
 	// Following from the flag crazy, the fragment offset is the low 13 bits of the 7th
 	// and 8th bytes.
-	p.FragmentOffset = getUint16(data[6:8], false) & 0x1FFF
+	p.FragmentOffset = GetUint16(data[6:8], false) & 0x1FFF
 
 	// The remaining fields are fairly sensible. TTL is the 9th byte.
 	p.TTL = uint8(data[8])
@@ -96,7 +100,7 @@ func (p *IPv4Packet) FromBytes(data []byte) error {
 	p.Protocol = IPProtocol(data[9])
 
 	// Header checksum is eleven and twelve.
-	p.Checksum = getUint16(data[10:12], false)
+	p.Checksum = GetUint16(data[10:12], false)
 
 	// Then the source IP and destination IP.
 	p.SourceAddress = data[12:16]
@@ -116,7 +120,7 @@ func (p *IPv4Packet) FromBytes(data []byte) error {
 	dataLen := p.TotalLength - (uint16(p.IHL) * 4)
 
 	if dataLen > uint16(len(data[20:])) {
-		return IncorrectPacket
+		return ErrIncorrectPacket
 	}
 
 	// Build the transport layer data.
@@ -141,6 +145,7 @@ func (p *IPv4Packet) buildTransportLayer(data []byte) {
 // IPv6
 //-------------------------------------------------------------------------------------------
 
+// IPv6Packet IPv6 Packet
 type IPv6Packet struct {
 	TrafficClass       uint8
 	FlowLabel          uint32 // This is a huge waste of space for a 20-bit field. Rethink?
@@ -152,19 +157,21 @@ type IPv6Packet struct {
 	data               TransportLayer
 }
 
+// InternetData get data
 func (p *IPv6Packet) InternetData() TransportLayer {
 	return p.data
 }
 
+// FromBytes set data
 func (p *IPv6Packet) FromBytes(data []byte) error {
 	// Confirm that we have enough data for the smallest possible header.
 	if len(data) < 40 {
-		return InsufficientLength
+		return ErrInsufficientLength
 	}
 
 	// Check that this actually is an IPv6 packet.
 	if ((uint8(data[0]) & 0xF0) >> 4) != uint8(6) {
-		return IncorrectPacket
+		return ErrIncorrectPacket
 	}
 
 	// The traffic class is the octet following the version.
@@ -177,7 +184,7 @@ func (p *IPv6Packet) FromBytes(data []byte) error {
 	p.FlowLabel += uint32(data[3])
 
 	// The remaining fields are simply aligned.
-	p.Length = getUint16(data[4:6], false)
+	p.Length = GetUint16(data[4:6], false)
 	p.NextHeader = IPProtocol(data[6])
 	p.HopLimit = uint8(data[7])
 
@@ -185,7 +192,7 @@ func (p *IPv6Packet) FromBytes(data []byte) error {
 	p.DestinationAddress = data[24:40]
 
 	if p.Length > uint16(len(data[40:])) {
-		return IncorrectPacket
+		return ErrIncorrectPacket
 	}
 	// Following the fixed headers are a sequence of extension headers
 	// terminating in the transport data.

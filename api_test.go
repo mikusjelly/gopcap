@@ -42,10 +42,10 @@ func TestParse(t *testing.T) {
 	// Check the packet header from the first packet. Including the raw data is a lousy way to test, but
 	// at least the packet is small.
 	packet := parsed.Packets[0]
-	correct_ts := 321259*time.Hour + 31*time.Minute + 6*time.Second + 654*time.Millisecond + 692*time.Microsecond
+	correctTs := 321259*time.Hour + 31*time.Minute + 6*time.Second + 654*time.Millisecond + 692*time.Microsecond
 
-	if packet.Timestamp != correct_ts {
-		t.Errorf("Unexpected TS: expected %v, got %v.", correct_ts, packet.Timestamp)
+	if packet.Timestamp != correctTs {
+		t.Errorf("Unexpected TS: expected %v, got %v.", correctTs, packet.Timestamp)
 	}
 	if packet.IncludedLen != uint32(96) {
 		t.Errorf("Unexpected included length: expected %v, got %v.", 96, packet.IncludedLen)

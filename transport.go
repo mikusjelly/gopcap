@@ -11,10 +11,12 @@ type UnknownTransport struct {
 	data []byte
 }
 
+// TransportData get data
 func (u *UnknownTransport) TransportData() []byte {
 	return u.data
 }
 
+// FromBytes set data
 func (u *UnknownTransport) FromBytes(data []byte) error {
 	u.data = data
 	return nil
@@ -48,21 +50,23 @@ type TCPSegment struct {
 	data            []byte
 }
 
+// TransportData get data
 func (t *TCPSegment) TransportData() []byte {
 	return t.data
 }
 
+// FromBytes set data
 func (t *TCPSegment) FromBytes(data []byte) error {
 	// Begin by confirming that we have enough data for a complete TCP header.
 	if len(data) < 20 {
-		return InsufficientLength
+		return ErrInsufficientLength
 	}
 
 	// The first four fields are really easy.
-	t.SourcePort = getUint16(data[0:2], false)
-	t.DestinationPort = getUint16(data[2:4], false)
-	t.SequenceNumber = getUint32(data[4:8], false)
-	t.AckNumber = getUint32(data[8:12], false)
+	t.SourcePort = GetUint16(data[0:2], false)
+	t.DestinationPort = GetUint16(data[2:4], false)
+	t.SequenceNumber = GetUint32(data[4:8], false)
+	t.AckNumber = GetUint32(data[8:12], false)
 
 	// The header size is the top four bits of the next byte.
 	t.HeaderSize = uint8(data[12]) >> 4
@@ -100,9 +104,9 @@ func (t *TCPSegment) FromBytes(data []byte) error {
 	}
 
 	// Now we're back to sane things.
-	t.WindowSize = getUint16(data[14:16], false)
-	t.Checksum = getUint16(data[16:18], false)
-	t.UrgentOffset = getUint16(data[18:20], false)
+	t.WindowSize = GetUint16(data[14:16], false)
+	t.Checksum = GetUint16(data[16:18], false)
+	t.UrgentOffset = GetUint16(data[18:20], false)
 
 	// If the header size is larger than 5 (it's measured in 32-bit words for reasons that escape me),
 	// we have some number of extra bytes that form the TCP options.
@@ -110,7 +114,7 @@ func (t *TCPSegment) FromBytes(data []byte) error {
 	data = data[20:]
 
 	if len(data) < int(extraBytes) {
-		return InsufficientLength
+		return ErrInsufficientLength
 	}
 
 	t.OptionData = data[:extraBytes]
@@ -135,21 +139,23 @@ type UDPDatagram struct {
 	data            []byte
 }
 
+// TransportData get data
 func (u *UDPDatagram) TransportData() []byte {
 	return u.data
 }
 
+// FromBytes set data
 func (u *UDPDatagram) FromBytes(data []byte) error {
 	// Begin by confirming that we have enough data to actually represent a UDP datagram.
 	if len(data) < 8 {
-		return InsufficientLength
+		return ErrInsufficientLength
 	}
 
 	// Happily, UDP is super simple. This makes this code equally simple.
-	u.SourcePort = getUint16(data[0:2], false)
-	u.DestinationPort = getUint16(data[2:4], false)
-	u.Length = getUint16(data[4:6], false)
-	u.Checksum = getUint16(data[6:8], false)
+	u.SourcePort = GetUint16(data[0:2], false)
+	u.DestinationPort = GetUint16(data[2:4], false)
+	u.Length = GetUint16(data[4:6], false)
+	u.Checksum = GetUint16(data[6:8], false)
 
 	// All that remains is data.
 	u.data = data[8:]

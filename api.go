@@ -1,5 +1,5 @@
 /*
-gopcap is pure-Go implementation of a parser for .pcap files. Written from the
+Package gopcap is pure-Go implementation of a parser for .pcap files. Written from the
 ground up for plugging directly into other components, the API is focused on
 simplicity and clarity. To this end, it exposes the barest minimum of
 functionality in as clear an API as possible.
@@ -12,11 +12,17 @@ import (
 	"time"
 )
 
-// Errors
-var NotAPcapFile error = errors.New("Not a pcap file.")
-var InsufficientLength error = errors.New("Insufficient length.")
-var UnexpectedEOF error = errors.New("Unexpected EOF.")
-var IncorrectPacket error = errors.New("Incorrect packet type.")
+// ErrNotAPcapFile Not a pcap file.
+var ErrNotAPcapFile error = errors.New("Not a pcap file")
+
+// ErrInsufficientLength Insufficient length
+var ErrInsufficientLength error = errors.New("Insufficient length")
+
+// ErrUnexpectedEOF Unexpected EOF
+var ErrUnexpectedEOF error = errors.New("Unexpected EOF")
+
+// ErrIncorrectPacket Incorrect packet type
+var ErrIncorrectPacket error = errors.New("Incorrect packet type")
 
 // Link encodes a given Link-Layer header type. See http://www.tcpdump.org/linktypes.html for a more-full
 // explanation of each header type.
@@ -146,6 +152,7 @@ const (
 type IPProtocol uint8
 
 const (
+	// IPP_ICMP ICMP 协议
 	IPP_ICMP      IPProtocol = 0x01
 	IPP_TCP       IPProtocol = 0x06
 	IPP_UDP       IPProtocol = 0x11

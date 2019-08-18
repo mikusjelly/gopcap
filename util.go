@@ -1,8 +1,8 @@
 package gopcap
 
-// getUint16 takes a two-element byte slice and returns the uint16 contained within it. If flipped
+// GetUint16 takes a two-element byte slice and returns the uint16 contained within it. If flipped
 // is set, assumes the byte order is reversed.
-func getUint16(buf []byte, flipped bool) uint16 {
+func GetUint16(buf []byte, flipped bool) uint16 {
 	num := uint16(0)
 	first, second := 0, 1
 
@@ -15,9 +15,9 @@ func getUint16(buf []byte, flipped bool) uint16 {
 	return num
 }
 
-// getUint32 takes a four-element byte slice and returns the uint32 contained within it. If flipped
+// GetUint32 takes a four-element byte slice and returns the uint32 contained within it. If flipped
 // is set, assumes the byte order is reversed.
-func getUint32(buf []byte, flipped bool) uint32 {
+func GetUint32(buf []byte, flipped bool) uint32 {
 	num := uint32(0)
 	first, second, third, fourth := 0, 1, 2, 3
 
@@ -30,9 +30,9 @@ func getUint32(buf []byte, flipped bool) uint32 {
 	return num
 }
 
-// getInt32 takes a four-element byte slice and returns the Int32 contained within it. If flipped
+// GetInt32 takes a four-element byte slice and returns the Int32 contained within it. If flipped
 // is set, assumes the byte order is reversed.
-func getInt32(buf []byte, flipped bool) int32 {
+func GetInt32(buf []byte, flipped bool) int32 {
 	num := int32(0)
 	first, second, third, fourth := 0, 1, 2, 3
 
