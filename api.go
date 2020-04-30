@@ -24,6 +24,9 @@ var ErrUnexpectedEOF error = errors.New("Unexpected EOF")
 // ErrIncorrectPacket Incorrect packet type
 var ErrIncorrectPacket error = errors.New("Incorrect packet type")
 
+// ErrPacketSizeLimited Packet size limited during capture
+var ErrPacketSizeLimited error = errors.New("Packet size limited during capture")
+
 // Link encodes a given Link-Layer header type. See http://www.tcpdump.org/linktypes.html for a more-full
 // explanation of each header type.
 type Link uint32
@@ -231,10 +234,15 @@ func Parse(src io.Reader) (PcapFile, error) {
 	// Whatever remains now are packets. Parse the rest of the file.
 	file.Packets = make([]Packet, 0)
 
-	for err == nil {
+	for true {
 		pkt := new(Packet)
 		err = parsePacket(pkt, src, flipped, file.LinkType)
 		file.Packets = append(file.Packets, *pkt)
+		if err == ErrPacketSizeLimited {
+			continue
+		} else if err != nil {
+			break
+		}
 	}
 
 	// EOF is a safe error, so switch that to nil.

@@ -120,6 +120,9 @@ func parseLinkData(data []byte, linkType Link) (LinkLayer, error) {
 
 	switch linkType {
 	case ETHERNET:
+		if bytes.Equal(data, []byte{0, 0, 0, 0}) {
+			return nil, ErrPacketSizeLimited
+		}
 		pkt = new(EthernetFrame)
 	default:
 		pkt = new(UnknownLink)
